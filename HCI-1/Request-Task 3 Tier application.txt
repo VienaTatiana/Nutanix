@@ -1,0 +1,129 @@
+CTO:
+Serving the request to configure a 3-tier application stack in an HCI cluster to replicate its main revenue-generating application stack.
+Below I detail a summary of the needs of the interested parties and a summary of the tasks carried out.
+
+The requests for CTO
+-----------------------
+1. Create a 3-Tier application configuration with three virtual machine (Application server VM, Web  Server VM, Database VM)
+2. 2 separate environments for 3-tier application:  Production and Development.
+3. The production environment requires built-in data protection using backup/restore with snapshots and no more than 1 hour of data loss after a failure.
+4. Dynamically add CPU/Memory resources to online virtual machines (add 1 vCPU and 2GB memory to the database server) is required.
+5. Final verification is the removal of a key VM and performing a full restoration
+
+Tasks
+
+1. Were reated the three virtual machines using the VM dashbord in Prism with the following names with the convention assigned for the system administrator:
+	1. Application server VM : 	app-prod
+	2.Web  Server VM:		web-prod
+	3.Database VM :			db-prod
+ 
+2. The three VMs for the Development environment were cloned from the Production environment, being a copy of their similar ones in capacity and operating system, but they were assigned to different networks according 
+   to the specifications of the Operations Network and names were assigned to separate the resources for the Production environment and Development environment with the convention assigned for the system administrator.
+	1.	Application server VM- production environment:	 	app-prod
+	2.	Web  Server VM- production environment:			web-prod
+	3.	Database VM- production environment:			db-prod
+	4.	Application server VM- development environment: 	app-dev
+	5.	Web  Server VM- development environment:		web-dev
+	6.	Database VM- development environment:			db-dev
+
+3. For the production environment the data protection was created with the name DR-PRODUCTION, the entities to protect were selected (app-prod VM, web-prod VM, db-prod VM) and created a new schedule with the requirement 
+   of 1 hour data loss after a failure (local schedule: repeat every 60 minutes). The status and setting of protection domain was verified, and was verified that snapshots are being taken.
+
+4. In the Prism, VM dashboard/Tables, was selected the virtual machine db-prod and de-dev and without turning off the virtual machines were updated and added 1 vCPU and 2 GB more to the initial configuration for a total of 
+   2vCPU and 6GB of capacity
+
+5. For this requirement, the app-prod virtual machine was completely removed using a delete procedure, after that the virtual machine was restore using the last snapshot saved and was created as new entity.
+   The restoration of the virtual machine was verified in the VM dashboard/Table.
+
+The requests of Systems Administrator
+-------------------------------------
+1. Microsoft SQL on Windows, has been chosen for the database tier
+2. Application server and web server tiers will both be Linux based
+3. Each virtual machine will be configured with 1 vCPU and 4 GB of RAM. 
+4. For testing purposes you will need to configure the Network Time Protocol (NTP) using the public service, pool.ntp.org, and 8.8.8.8 for the Domain Naming Service (DNS).
+5. New storage container called Images to hold the Windows and CentOS virtual disk images (C:\Images) to be uploaded to the Image Service.
+6. The virtual machine naming convention will be based on a 2-3 letter representation, followed by the environment. Example: Database server for Production, use db-prod. Application for development, use app-dev, etc…
+7. The production virtual machines should be duplicated to create an identical development environment.
+
+Tasks
+
+1. In Prism / VM / create VM / Disk, the db-prod and db-env virtual machines were added a new disk which was edited to load the Windows operating system stored in the image container that was created.
+
+2. In Prism / VM / create VM / Disk, the db-prod and db-env virtual machines were added a new disk which was edited to load the Linux_CentOS operating system stored in the images container that was created.
+
+3.In Prism/VM/create VM/Compute Details for each virtual machine the requested capacity was added.
+	- vCPU(s) : 1
+	- Number of core per VCPU:1
+	- Memory: 4
+
+4. In Prism/Setting/Network/NTP servers was added the NTP server using the host name assigned pool.ntp.org (0.pool.ntp.org)
+   In Prism/Setting/Network/Name servers was added the DNS server using the ip address assigned 8.8.8.8.
+
+5. In Prism/Storage dashboard/+Storage Container/Create Storage Container was created a new storage container with the name “Images”.
+   In Prism/Setting/Image Configuration/Create Image,  uploaded the 2 images Windows and Linux_CentOS to the new Storage Container Images
+	-Name: Windows
+	-Image Type: Disk
+	-Storage Container: Images
+	-Upload a file from C:/Image/windows.qcow2
+	
+	-Name: Linux_CentOS
+	-Image Type: Disk
+	-Storage Container: Images
+	-Upload a file from C:/Image/CentOS.qcow2
+
+6. All requested virtual machines were named according to convention 2-3 letter representation, followed by the environment
+	1.	Application server VM- production environment:	app-prod
+	2.	Web  Server VM- production environment:		web-prod
+	3.	Database VM- production environment:		db-prod
+	4.	Application server VM- development environment: app-dev
+	5.	Web  Server VM- development environment:	web-dev
+	6.	Database VM- development environment:		db-dev
+
+7. In Prism/VM/Table/*selected VM/Clone, The Production virtual machines (app-prod, web-prod, db-prod) were cloned to create the virtual machines of the development environment and to guarantee that they were identical
+in capacity and operating system to those of the production environment.
+	-vCPU(s) : 1
+	-Number of core per VCPU:1
+	-Memory: 4
+  But the Development Environment virtual machines were assigned to different networks according to the specifications of the Network Operations and different names were assigned according to the convention assigned by
+  the system administrator..
+
+	VM_Name			VM_convention_name		Ip_address
+	Application server VM	app-dev				172.31.101.2
+	Web  Server VM		web-dev				172.31.101.3
+	Database VM		db-dev				172.31.101.4
+
+
+The requests of Network Operations
+-----------------------------------
+1. The production network will be on vlan 0, using the 172.31.0.0/24 network and will be managed using IPAM/DHCP from an IP Pool provided by the Network Operations group. 
+    The IP Pool will use a Start address of 172.31.0.210 and an End address of 172.31.0.230.
+2. The development network will be unmanaged on VLAN 101 using the 172.31.101.0/24 network.
+
+Tasks
+
+1. In Prism/Setting/Network configurations/Create Network was added the Production Network with the assigned IP address network 172.31.0.0/24.
+	-Name: Production_Network
+	-VLAN ID: 0
+   For that Production Network will be managed using IPAM/DHCP from an IP Pool provided by the Network Operations group, the options “Enable IP address management (IPAM)” 
+   and “Configure Domains Settings” were enabled and the blank spaces were filled with the network’s assigned information 
+	Network IP Address: 172.31.0.0/24
+	Gateway IP Address: 172.31.0.1
+	DNS server IP address: 8.8.8.8
+	IP address pools/Create Pool:
+		Start IP address: 172.31.0.210
+		End IP address:   172.31.0.230
+	DHCP IP address: 172.31.0.254
+   Ensuring that the Nutanix Acropolis DHCP server will not assign a dynamic IP address outside the assigned cluster
+
+2. In Prism/Setting/Network configurations/Create Network was added the Development Network with the assigned IP address network 172.31.101.0/24
+   The assigned network was configured in the same way as the Production Network with the difference that an IP address pool was not created and a DHCP IP address was not assigned, 
+   and for the IP addresses assigned to the virtual machines they were assigned manually
+	-Name: Development_Network
+	-VLAN: 101
+
+	VM_Name			VM_convention_name	Ip_address
+	Application server VM	app-dev			172.31.101.2
+	Web  Server VM		web-dev			172.31.101.3
+	Database VM		db-dev			172.31.101.4
+
+
