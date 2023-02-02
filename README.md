@@ -16,7 +16,7 @@ Para completar el proyecto, es necesario:
 
 ## **Project 3: Hybrid Cloud SaaS: Three-Tier Web Application**
 
-**Detalles ed la configuracion del proyecto**
+**Detalles de la configuracion del proyecto**
 
 Para completar el proyecto, deberá ser capaz de:
 
