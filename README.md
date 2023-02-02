@@ -4,7 +4,7 @@ Proyectos relacionados con el programa de Hybrid Cloud Engineer dictado por Udac
 
 ## **Project 2: Private Cloud Saas: Three-Tier Web Application**
 
-**Pasos del proyecto**
+**Detalles de la configuracion del proyecto**
 
 Para completar el proyecto, es necesario:
 
@@ -16,7 +16,7 @@ Para completar el proyecto, es necesario:
 
 ## **Project 3: Hybrid Cloud SaaS: Three-Tier Web Application**
 
-**Pasos del proyecto**
+**Detalles ed la configuracion del proyecto**
 
 Para completar el proyecto, deberá ser capaz de:
 
